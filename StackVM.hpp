@@ -1,0 +1,69 @@
+#pragma once
+
+#include <vector>
+#include <bit>
+
+
+enum bytecode : int {
+	PUSH,
+	ADD, SUB, MUL, DIV,
+	ADDFP, SUBFP, MULFP, DIVFP,
+	NOT, AND, OR,
+	ISEQ, ISGT, ISGE, ISLT, ISLE,
+	JMP, JIF,
+	LOAD, STORE,
+	HALT
+};
+
+inline int IMM(int   immediate){ return immediate; }
+inline int IMM(float immediate){ return std::bit_cast<int>(immediate); }
+
+class StackVM {
+private:
+	std::vector<int> instructions;
+	std::vector<int> stack;
+	int locals[1024] = {}; //FIXME: fixed-size
+	unsigned IP=0;
+	bool halted=false;
+
+
+	inline void exec_push();
+
+	inline void exec_add();
+	inline void exec_sub();
+	inline void exec_mul();
+	inline void exec_div();
+
+	inline void exec_addfp();
+	inline void exec_subfp();
+	inline void exec_mulfp();
+	inline void exec_divfp();
+
+	inline void exec_not();
+	inline void exec_and();
+	inline void exec_or();
+
+	inline void exec_iseq();
+	inline void exec_isgt();
+	inline void exec_isge();
+	inline void exec_islt();
+	inline void exec_isle();
+
+	inline void exec_jmp();
+	inline void exec_jif();
+
+	inline void exec_load();
+	inline void exec_store();
+
+public:
+	StackVM(std::initializer_list<int> &&instructions)
+		: instructions(instructions) {}
+
+	int run_switch();
+	int run_goto();
+
+	void reset(){
+		IP = 0;
+		halted = false;
+	}
+};
