@@ -218,6 +218,25 @@ void StackVM::exec_store(){
 	IP += 2;
 }
 
+void StackVM::exec_inc(){
+	stack.back() += 1;
+	++IP;
+}
+
+void StackVM::exec_dec(){
+	stack.back() -= 1;
+	++IP;
+}
+
+void StackVM::exec_jnz(){
+	int op = stack.back(); // does not pop
+	if(op != 0){
+		IP = instructions[IP+1];
+	}else{
+		IP += 2;
+	}
+}
+
 TEST_CASE("load and store"){
 	StackVM vm { PUSH, IMM(1.4f), STORE, 0, LOAD, 0, HALT };
 	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(1.4f));
@@ -250,6 +269,9 @@ int StackVM::run_switch(){
 			case JIF:   exec_jif();   break;
 			case LOAD:  exec_load();  break;
 			case STORE: exec_store(); break;
+			case INC:   exec_inc();   break;
+			case DEC:   exec_dec();   break;
+			case JNZ:   exec_jnz();   break;
 			case HALT: {
 				halted = true;
 				break;
@@ -271,6 +293,8 @@ int StackVM::run_goto(){
 		&&do_iseq, &&do_isgt, &&do_isge, &&do_islt, &&do_isle,
 		&&do_jmp, &&do_jif,
 		&&do_load, &&do_store,
+		&&do_inc, &&do_dec,
+		&&do_jnz,
 		&&do_halt
 	};
 #define DISPATCH goto *dispatch_table[instructions[IP]]
@@ -298,6 +322,9 @@ int StackVM::run_goto(){
 		do_jif:   exec_jif();   DISPATCH;
 		do_load:  exec_load();  DISPATCH;
 		do_store: exec_store(); DISPATCH;
+		do_inc:   exec_inc();   DISPATCH;
+		do_dec:   exec_dec();   DISPATCH;
+		do_jnz:   exec_jnz();   DISPATCH;
 		do_halt: {
 			halted = true;
 			break;

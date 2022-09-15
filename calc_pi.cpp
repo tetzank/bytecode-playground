@@ -23,14 +23,13 @@ int main(){
 	StackVM vm({
 		// int n = 100'000'000;
 		PUSH, 100'000'000,
-		STORE, 0,
 		// float res = 4.0f;
 		PUSH, IMM(4.0f),
 		STORE, 1,
 		// int v = 3;
 		PUSH, IMM(3.0f),
 		STORE, 2,
-		// loop, address 12
+		// loop, address 10
 		// res = (res - (4.0f / v)) + (4.0f / (v+2));
 		LOAD, 1,
 		PUSH, IMM(4.0f),
@@ -50,15 +49,8 @@ int main(){
 		ADDFP,
 		STORE, 2,
 		// n--
-		LOAD, 0,
-		PUSH, 1,
-		SUB,
-		STORE, 0,
-		// n > 0
-		LOAD, 0,
-		PUSH, 0,
-		ISGT,
-		JIF, 12,
+		DEC,
+		JNZ, 10,
 
 		// return res
 		LOAD, 1,

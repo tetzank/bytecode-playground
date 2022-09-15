@@ -12,6 +12,8 @@ enum bytecode : int {
 	ISEQ, ISGT, ISGE, ISLT, ISLE,
 	JMP, JIF,
 	LOAD, STORE,
+	INC, DEC,
+	JNZ, // jump if non-zero, does not pop operand
 	HALT
 };
 
@@ -69,6 +71,10 @@ private:
 
 	inline void exec_load();
 	inline void exec_store();
+
+	inline void exec_inc();
+	inline void exec_dec();
+	inline void exec_jnz();
 
 public:
 	StackVM(std::initializer_list<int> &&instructions)
