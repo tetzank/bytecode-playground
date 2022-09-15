@@ -21,7 +21,22 @@ inline int IMM(float immediate){ return std::bit_cast<int>(immediate); }
 class StackVM {
 private:
 	std::vector<int> instructions;
-	std::vector<int> stack;
+	//std::vector<int> stack;
+	struct Stack {
+		int data[128]; // fixed-size, requires check during assembling of bytecode
+		int idx = 0;
+		void push_back(int value){
+			data[idx] = value;
+			++idx;
+		}
+		int &back(){
+			return data[idx-1];
+		}
+		void pop_back(){
+			--idx;
+		}
+	};
+	Stack stack;
 	int locals[1024] = {}; //FIXME: fixed-size
 	unsigned IP=0;
 	bool halted=false;
