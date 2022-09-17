@@ -17,5 +17,5 @@ add_executable(calc_pi calc_pi.cpp StackVM.cpp)
 target_compile_definitions(calc_pi PUBLIC DOCTEST_CONFIG_DISABLE)
 target_compile_features(calc_pi PRIVATE cxx_std_20)
 
-add_executable(test test.cpp StackVM.cpp)
+add_executable(test test.cpp StackVM.cpp RegisterVM.cpp)
 target_compile_features(test PRIVATE cxx_std_20)
