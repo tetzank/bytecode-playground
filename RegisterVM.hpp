@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <bit>
 
 
 enum ops : uint32_t {
@@ -14,43 +15,43 @@ enum ops : uint32_t {
 	HALT
 };
 
-#if 0
-// bitfield
-struct opcode {
-	uint8_t op     :  8;
-	unsigned lflag :  1;
-	unsigned lhs   : 11;
-	unsinged rflag :  1;
-	unsigned rhs   : 11;
+
+// register index
+struct R {
+	int index;
+
+	explicit R(int index) : index(index) {}
 };
-#endif
 
-inline uint16_t R(int idx){
-	return idx;
-}
+// encoding for the instructions, using bitfields for simplicity
+struct opcode {
+	unsigned op    :  8; // instruction id
+	unsigned lhs   : 23; // also destination, hence always a register
+	unsigned isimm :  1; // flag indicating if immediate or not
+	unsigned rhs   : 32; // register or immediate (int or float)
 
-inline uint16_t IMM(uint16_t value){
-	return (1 << 11) | (value & 0b111'1111'1111);
-}
+	opcode(enum ops op, R dst, R src)
+		: op(op), lhs(dst.index), isimm(0), rhs(src.index) {}
+	opcode(enum ops op, R dst, int32_t imm)
+		: op(op), lhs(dst.index), isimm(1), rhs(imm) {}
+	opcode(enum ops op, R dst, float imm)
+		: op(op), lhs(dst.index), isimm(1), rhs(std::bit_cast<uint32_t>(imm)) {}
+};
+static_assert(sizeof(opcode) == sizeof(uint64_t), "wrong size of opcode");
 
-inline uint32_t OP(enum ops op, uint16_t dst, uint16_t src){
-	return (op << 24) | (dst << 12) | src;
-}
 
 class RegisterVM {
 private:
-	std::vector<uint32_t> instructions;
+	std::vector<opcode> instructions;
 	uint32_t registerFile[1024]; // fixed-size
 	unsigned IP=0;
 	bool halted=false;
 
-	static inline uint32_t getOperation(uint32_t instr);
-	static inline uint32_t getDst(uint32_t instr);
-	       inline uint32_t getLeftOperand(uint32_t instr) const;
-	       inline uint32_t getRightOperand(uint32_t instr) const;
+	inline uint32_t getLeftOperand(opcode instr) const;
+	inline uint32_t getRightOperand(opcode instr) const;
 
 public:
-	RegisterVM(std::initializer_list<uint32_t> &&instructions)
+	RegisterVM(std::initializer_list<opcode> &&instructions)
 		: instructions(instructions) {}
 
 	uint32_t run_switch();

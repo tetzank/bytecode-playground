@@ -3,67 +3,60 @@
 #include <doctest/doctest.h>
 
 
-uint32_t RegisterVM::getOperation(uint32_t instr){
-	return instr >> 24;
-}
-uint32_t RegisterVM::getDst(uint32_t instr){
-	return (instr >> 12) & 0xff;
-}
-
-uint32_t RegisterVM::getLeftOperand(uint32_t instr) const {
+uint32_t RegisterVM::getLeftOperand(opcode instr) const {
 	// always register, no immediate possible
-	return registerFile[getDst(instr)];
+	return registerFile[instr.lhs];
 }
-uint32_t RegisterVM::getRightOperand(uint32_t instr) const {
-	if(instr & 0b1000'0000'0000){
+uint32_t RegisterVM::getRightOperand(opcode instr) const {
+	if(instr.isimm){
 		// immediate
-		return instr & 0b111'1111'1111;
+		return instr.rhs;
 	}else{
 		// register, load value
-		return registerFile[instr & 0xff];
+		return registerFile[instr.rhs];
 	}
 }
 
 TEST_CASE("testing mov"){
 	RegisterVM vm({
-		OP(MOV, R(0), IMM(88)),
-		OP(HALT, 0, 0)
+		{MOV, R(0), 88},
+		{HALT, R(0), 0}
 	});
 	CHECK(vm.run_switch() == 88);
 }
 
 TEST_CASE("testing add"){
 	RegisterVM vm({
-		OP(MOV, R(0), IMM(88)),
-		OP(ADD, R(0), IMM(12)),
-		OP(HALT, 0, 0)
+		{MOV, R(0), 88},
+		{ADD, R(0), 12},
+		{HALT, R(0), 0}
 	});
 	CHECK(vm.run_switch() == 100);
 }
 
 TEST_CASE("testing sub"){
 	RegisterVM vm({
-		OP(MOV, R(0), IMM(88)),
-		OP(SUB, R(0), IMM(12)),
-		OP(HALT, 0, 0)
+		{MOV, R(0), 88},
+		{SUB, R(0), 12},
+		{HALT, R(0), 0}
 	});
 	CHECK(vm.run_switch() == 76);
 }
 
 TEST_CASE("testing mul"){
 	RegisterVM vm({
-		OP(MOV, R(0), IMM(88)),
-		OP(MUL, R(0), IMM(10)),
-		OP(HALT, 0, 0)
+		{MOV, R(0), 88},
+		{MUL, R(0), 10},
+		{HALT, R(0), 0}
 	});
 	CHECK(vm.run_switch() == 880);
 }
 
 TEST_CASE("testing div"){
 	RegisterVM vm({
-		OP(MOV, R(0), IMM(12)),
-		OP(DIV, R(0), IMM(3)),
-		OP(HALT, 0, 0)
+		{MOV, R(0), 12},
+		{DIV, R(0), 3},
+		{HALT, R(0), 0}
 	});
 	CHECK(vm.run_switch() == 4);
 }
@@ -71,26 +64,26 @@ TEST_CASE("testing div"){
 
 uint32_t RegisterVM::run_switch(){
 	while(!halted){
-		uint32_t instr = instructions[IP];
-		switch(getOperation(instr)){
+		opcode instr = instructions[IP];
+		switch(instr.op){
 			case MOV: {
-				registerFile[getDst(instr)] = getRightOperand(instr);
+				registerFile[instr.lhs] = getRightOperand(instr);
 				break;
 			}
 			case ADD: {
-				registerFile[getDst(instr)] = getLeftOperand(instr) + getRightOperand(instr);
+				registerFile[instr.lhs] = getLeftOperand(instr) + getRightOperand(instr);
 				break;
 			}
 			case SUB: {
-				registerFile[getDst(instr)] = getLeftOperand(instr) - getRightOperand(instr);
+				registerFile[instr.lhs] = getLeftOperand(instr) - getRightOperand(instr);
 				break;
 			}
 			case MUL: {
-				registerFile[getDst(instr)] = getLeftOperand(instr) * getRightOperand(instr);
+				registerFile[instr.lhs] = getLeftOperand(instr) * getRightOperand(instr);
 				break;
 			}
 			case DIV: {
-				registerFile[getDst(instr)] = getLeftOperand(instr) / getRightOperand(instr);
+				registerFile[instr.lhs] = getLeftOperand(instr) / getRightOperand(instr);
 				break;
 			}
 
