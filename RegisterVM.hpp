@@ -50,11 +50,33 @@ private:
 	inline uint32_t getLeftOperand(opcode instr) const;
 	inline uint32_t getRightOperand(opcode instr) const;
 
+	inline void exec_mov(opcode instr);
+
+	inline void exec_add(opcode instr);
+	inline void exec_sub(opcode instr);
+	inline void exec_mul(opcode instr);
+	inline void exec_div(opcode instr);
+
+	inline void exec_addfp(opcode instr);
+	inline void exec_subfp(opcode instr);
+	inline void exec_mulfp(opcode instr);
+	inline void exec_divfp(opcode instr);
+
+	inline void exec_cmpeq(opcode instr);
+	inline void exec_cmpgt(opcode instr);
+	inline void exec_cmpge(opcode instr);
+	inline void exec_cmplt(opcode instr);
+	inline void exec_cmple(opcode instr);
+
+	inline void exec_jmp(opcode instr);
+	inline void exec_jif(opcode instr);
+
 public:
 	RegisterVM(std::initializer_list<opcode> &&instructions)
 		: instructions(instructions) {}
 
 	uint32_t run_switch();
+	uint32_t run_goto();
 
 	void reset(){
 		IP = 0;

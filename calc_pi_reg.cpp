@@ -41,4 +41,16 @@ int main(){
 		);
 		vm.reset();
 	}
+
+	puts("goto with manual jump table");
+	for(int i=0; i<5; ++i){
+		auto t_start = std::chrono::high_resolution_clock::now();
+		float res = std::bit_cast<float>(vm.run_goto());
+		auto t_end = std::chrono::high_resolution_clock::now();
+		printf("Wall clock time passed: %10.2f ms - result: %f\n",
+			std::chrono::duration<double, std::milli>(t_end-t_start).count(),
+			res
+		);
+		vm.reset();
+	}
 }
