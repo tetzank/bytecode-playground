@@ -61,6 +61,42 @@ TEST_CASE("testing div"){
 	CHECK(vm.run_switch() == 4);
 }
 
+TEST_CASE("testing addfp"){
+	RegisterVM vm({
+		{MOV, R(0), 1.4f},
+		{ADDFP, R(0), 2.6f},
+		{HALT, R(0), 0}
+	});
+	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(4.0f));
+}
+
+TEST_CASE("testing subfp"){
+	RegisterVM vm({
+		{MOV, R(0), 1.4f},
+		{SUBFP, R(0), 0.5f},
+		{HALT, R(0), 0}
+	});
+	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(0.9f));
+}
+
+TEST_CASE("testing mulfp"){
+	RegisterVM vm({
+		{MOV, R(0), 1.4f},
+		{MULFP, R(0), 2.0f},
+		{HALT, R(0), 0}
+	});
+	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(2.8f));
+}
+
+TEST_CASE("testing divfp"){
+	RegisterVM vm({
+		{MOV, R(0), 1.4f},
+		{DIVFP, R(0), 0.7f},
+		{HALT, R(0), 0}
+	});
+	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(2.0f));
+}
+
 
 uint32_t RegisterVM::run_switch(){
 	while(!halted){
@@ -87,9 +123,55 @@ uint32_t RegisterVM::run_switch(){
 				break;
 			}
 
-			//TODO: FP arithmetic
+			// floating-point arithmetic
+			case ADDFP: {
+				float lhs = std::bit_cast<float>(getLeftOperand(instr));
+				float rhs = std::bit_cast<float>(getRightOperand(instr));
+				registerFile[instr.lhs] = std::bit_cast<uint32_t>(lhs + rhs);
+				break;
+			}
+			case SUBFP: {
+				float lhs = std::bit_cast<float>(getLeftOperand(instr));
+				float rhs = std::bit_cast<float>(getRightOperand(instr));
+				registerFile[instr.lhs] = std::bit_cast<uint32_t>(lhs - rhs);
+				break;
+			}
+			case MULFP: {
+				float lhs = std::bit_cast<float>(getLeftOperand(instr));
+				float rhs = std::bit_cast<float>(getRightOperand(instr));
+				registerFile[instr.lhs] = std::bit_cast<uint32_t>(lhs * rhs);
+				break;
+			}
+			case DIVFP: {
+				float lhs = std::bit_cast<float>(getLeftOperand(instr));
+				float rhs = std::bit_cast<float>(getRightOperand(instr));
+				registerFile[instr.lhs] = std::bit_cast<uint32_t>(lhs / rhs);
+				break;
+			}
+
 			//TODO: bool ops
-			//TODO: comparisons
+
+			// comparisons using normal registers, not extra flags
+			case CMPEQ: {
+				registerFile[instr.lhs] = getLeftOperand(instr) == getRightOperand(instr);
+				break;
+			}
+			case CMPGT: {
+				registerFile[instr.lhs] = getLeftOperand(instr) > getRightOperand(instr);
+				break;
+			}
+			case CMPGE: {
+				registerFile[instr.lhs] = getLeftOperand(instr) >= getRightOperand(instr);
+				break;
+			}
+			case CMPLT: {
+				registerFile[instr.lhs] = getLeftOperand(instr) < getRightOperand(instr);
+				break;
+			}
+			case CMPLE: {
+				registerFile[instr.lhs] = getLeftOperand(instr) <= getRightOperand(instr);
+				break;
+			}
 
 			case JMP: {
 				IP = getLeftOperand(instr);

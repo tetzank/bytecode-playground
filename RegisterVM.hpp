@@ -9,7 +9,7 @@ enum ops : uint32_t {
 	MOV,
 	ADD, SUB, MUL, DIV,
 	ADDFP, SUBFP, MULFP, DIVFP,
-	NOT, AND, OR,
+	//NOT, AND, OR,
 	CMPEQ, CMPGT, CMPGE, CMPLT, CMPLE,
 	JMP, JIF,
 	HALT
@@ -55,5 +55,9 @@ public:
 		: instructions(instructions) {}
 
 	uint32_t run_switch();
-	
+
+	void reset(){
+		IP = 0;
+		halted = false;
+	}
 };
