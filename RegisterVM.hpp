@@ -26,16 +26,16 @@ struct R {
 // encoding for the instructions, using bitfields for simplicity
 struct opcode {
 	unsigned op    :  8; // instruction id
-	unsigned lhs   : 23; // also destination, hence always a register
 	unsigned isimm :  1; // flag indicating if immediate or not
+	unsigned lhs   : 23; // also destination, hence always a register
 	unsigned rhs   : 32; // register or immediate (int or float)
 
 	opcode(enum ops op, R dst, R src)
-		: op(op), lhs(dst.index), isimm(0), rhs(src.index) {}
+		: op(op), isimm(0), lhs(dst.index), rhs(src.index) {}
 	opcode(enum ops op, R dst, int32_t imm)
-		: op(op), lhs(dst.index), isimm(1), rhs(imm) {}
+		: op(op), isimm(1), lhs(dst.index), rhs(imm) {}
 	opcode(enum ops op, R dst, float imm)
-		: op(op), lhs(dst.index), isimm(1), rhs(std::bit_cast<uint32_t>(imm)) {}
+		: op(op), isimm(1), lhs(dst.index), rhs(std::bit_cast<uint32_t>(imm)) {}
 };
 static_assert(sizeof(opcode) == sizeof(uint64_t), "wrong size of opcode");
 
