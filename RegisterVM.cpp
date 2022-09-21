@@ -152,26 +152,26 @@ TEST_CASE("testing divfp"){
 
 //TODO: add test cases
 void RegisterVM::exec_cmpeq(opcode instr){
-	registerFile[instr.lhs] = getLeftOperand(instr) == getRightOperand(instr);
+	cmpFlag = getLeftOperand(instr) == getRightOperand(instr);
 }
 void RegisterVM::exec_cmpgt(opcode instr){
-	registerFile[instr.lhs] = getLeftOperand(instr) > getRightOperand(instr);
+	cmpFlag = getLeftOperand(instr) > getRightOperand(instr);
 }
 void RegisterVM::exec_cmpge(opcode instr){
-	registerFile[instr.lhs] = getLeftOperand(instr) >= getRightOperand(instr);
+	cmpFlag = getLeftOperand(instr) >= getRightOperand(instr);
 }
 void RegisterVM::exec_cmplt(opcode instr){
-	registerFile[instr.lhs] = getLeftOperand(instr) < getRightOperand(instr);
+	cmpFlag = getLeftOperand(instr) < getRightOperand(instr);
 }
 void RegisterVM::exec_cmple(opcode instr){
-	registerFile[instr.lhs] = getLeftOperand(instr) <= getRightOperand(instr);
+	cmpFlag = getLeftOperand(instr) <= getRightOperand(instr);
 }
 
 void RegisterVM::exec_jmp(opcode instr){
 	IP = getLeftOperand(instr);
 }
 void RegisterVM::exec_jif(opcode instr){
-	if(getLeftOperand(instr)){
+	if(cmpFlag){
 		IP = getRightOperand(instr);
 	}
 }

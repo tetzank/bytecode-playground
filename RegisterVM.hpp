@@ -45,6 +45,7 @@ private:
 	std::vector<opcode> instructions;
 	uint32_t registerFile[1024]; // fixed-size
 	unsigned IP=0;
+	bool cmpFlag=false;
 	bool halted=false;
 
 	inline uint32_t getLeftOperand(opcode instr) const;

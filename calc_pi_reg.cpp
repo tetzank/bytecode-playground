@@ -23,9 +23,8 @@ int main(){
 
 		{SUB, R(1), 1}, // --n
 
-		{MOV, R(3), R(1)},
-		{CMPGT, R(3), 0},
-		{JIF, R(3), 2},
+		{CMPGT, R(1), 0},
+		{JIF, R(-1), 2},
 
 		{HALT, R(0), 0}
 	});
