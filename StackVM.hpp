@@ -82,6 +82,7 @@ public:
 
 	int run_switch();
 	int run_goto();
+	int run_direct();
 
 	void reset(){
 		IP = 0;

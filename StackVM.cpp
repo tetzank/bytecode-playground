@@ -12,6 +12,8 @@ TEST_CASE("testing push"){
 	CHECK(vm.run_switch() == 88);
 	vm.reset();
 	CHECK(vm.run_goto() == 88);
+	vm.reset();
+	CHECK(vm.run_direct() == 88);
 }
 
 void StackVM::exec_add(){
@@ -27,6 +29,8 @@ TEST_CASE("testing add"){
 	CHECK(vm.run_switch() == 3);
 	vm.reset();
 	CHECK(vm.run_goto() == 3);
+	vm.reset();
+	CHECK(vm.run_direct() == 3);
 }
 
 void StackVM::exec_sub(){
@@ -40,6 +44,8 @@ TEST_CASE("testing sub"){
 	CHECK(vm.run_switch() == 19);
 	vm.reset();
 	CHECK(vm.run_goto() == 19);
+	vm.reset();
+	CHECK(vm.run_direct() == 19);
 }
 
 void StackVM::exec_mul(){
@@ -53,6 +59,8 @@ TEST_CASE("testing mul"){
 	CHECK(vm.run_switch() == 44);
 	vm.reset();
 	CHECK(vm.run_goto() == 44);
+	vm.reset();
+	CHECK(vm.run_direct() == 44);
 }
 
 void StackVM::exec_div(){
@@ -66,6 +74,8 @@ TEST_CASE("testing div"){
 	CHECK(vm.run_switch() == 3);
 	vm.reset();
 	CHECK(vm.run_goto() == 3);
+	vm.reset();
+	CHECK(vm.run_direct() == 3);
 }
 
 void StackVM::exec_addfp(){
@@ -79,6 +89,8 @@ TEST_CASE("testing addfp"){
 	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(4.0f));
 	vm.reset();
 	CHECK(std::bit_cast<float>(vm.run_goto()) == doctest::Approx(4.0f));
+	vm.reset();
+	CHECK(std::bit_cast<float>(vm.run_direct()) == doctest::Approx(4.0f));
 }
 
 void StackVM::exec_subfp(){
@@ -92,6 +104,8 @@ TEST_CASE("testing subfp"){
 	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(0.9f));
 	vm.reset();
 	CHECK(std::bit_cast<float>(vm.run_goto()) == doctest::Approx(0.9f));
+	vm.reset();
+	CHECK(std::bit_cast<float>(vm.run_direct()) == doctest::Approx(0.9f));
 }
 
 void StackVM::exec_mulfp(){
@@ -105,6 +119,8 @@ TEST_CASE("testing mulfp"){
 	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(2.8f));
 	vm.reset();
 	CHECK(std::bit_cast<float>(vm.run_goto()) == doctest::Approx(2.8f));
+	vm.reset();
+	CHECK(std::bit_cast<float>(vm.run_direct()) == doctest::Approx(2.8f));
 }
 
 void StackVM::exec_divfp(){
@@ -118,6 +134,8 @@ TEST_CASE("testing divfp"){
 	CHECK(std::bit_cast<float>(vm.run_switch()) == doctest::Approx(2.0f));
 	vm.reset();
 	CHECK(std::bit_cast<float>(vm.run_goto()) == doctest::Approx(2.0f));
+	vm.reset();
+	CHECK(std::bit_cast<float>(vm.run_direct()) == doctest::Approx(2.0f));
 }
 
 void StackVM::exec_not(){
@@ -131,12 +149,16 @@ TEST_CASE("testing not"){
 		CHECK(vm.run_switch() == 1);
 		vm.reset();
 		CHECK(vm.run_goto() == 1);
+		vm.reset();
+		CHECK(vm.run_direct() == 1);
 	}
 	{
 		StackVM vm { PUSH, 1, NOT, HALT };
 		CHECK(vm.run_switch() == 0);
 		vm.reset();
 		CHECK(vm.run_goto() == 0);
+		vm.reset();
+		CHECK(vm.run_direct() == 0);
 	}
 }
 
@@ -330,5 +352,111 @@ int StackVM::run_goto(){
 			break;
 		}
 	}
+#undef DISPATCH
+	return stack.back();
+}
+
+int StackVM::run_direct(){
+	using Instr = void*;
+	static Instr dispatch_table[] = {
+		&&do_push, 
+		&&do_add, &&do_sub, &&do_mul, &&do_div,
+		&&do_addfp, &&do_subfp, &&do_mulfp, &&do_divfp,
+		&&do_not, &&do_and, &&do_or,
+		&&do_iseq, &&do_isgt, &&do_isge, &&do_islt, &&do_isle,
+		&&do_jmp, &&do_jif,
+		&&do_load, &&do_store,
+		&&do_inc, &&do_dec,
+		&&do_jnz,
+		&&do_halt
+	};
+
+	Instr *program = new Instr[instructions.size()];
+	Instr *dip = program;
+
+#define CPY(x) program[IP] = dispatch_table[x]
+#define CPYPARAM() ++IP; program[IP] = (void*)instructions[IP]
+	while(!halted){
+		switch(instructions[IP]){
+			case PUSH:  CPY(PUSH);  CPYPARAM(); break;
+			case ADD:   CPY(ADD);               break;
+			case SUB:   CPY(SUB);               break;
+			case MUL:   CPY(MUL);               break;
+			case DIV:   CPY(DIV);               break;
+			case ADDFP: CPY(ADDFP);             break;
+			case SUBFP: CPY(SUBFP);             break;
+			case MULFP: CPY(MULFP);             break;
+			case DIVFP: CPY(DIVFP);             break;
+			case NOT:   CPY(NOT);               break;
+			case AND:   CPY(AND);               break;
+			case OR:    CPY(OR);                break;
+			case ISEQ:  CPY(ISEQ);              break;
+			case ISGT:  CPY(ISGT);              break;
+			case ISGE:  CPY(ISGE);              break;
+			case ISLT:  CPY(ISLT);              break;
+			case ISLE:  CPY(ISLE);              break;
+			case JMP:   CPY(JMP);   CPYPARAM(); break;
+			case JIF:   CPY(JIF);   CPYPARAM(); break;
+			case LOAD:  CPY(LOAD);  CPYPARAM(); break;
+			case STORE: CPY(STORE); CPYPARAM(); break;
+			case INC:   CPY(INC);               break;
+			case DEC:   CPY(DEC);               break;
+			case JNZ:   CPY(JNZ);   CPYPARAM(); break;
+			case HALT:  CPY(HALT); halted=true; break;
+
+			default:
+				__builtin_trap(); // unsupported instruction
+		}
+		++IP;
+	}
+#undef CPY
+#undef CPYPARAM
+
+#define DISPATCH goto **dip
+#define OP int op=stack.back(); stack.pop_back()
+#define PARAM *(int*)(dip+1)
+#define OPFP(operation) \
+	float op2=std::bit_cast<float>(stack.back()); \
+	stack.pop_back(); \
+	float op1=std::bit_cast<float>(stack.back()); \
+	stack.back() = std::bit_cast<int>(op1 operation op2);
+
+	DISPATCH;
+	while(1){
+		do_push:  { stack.push_back(PARAM); dip+=2; DISPATCH; }
+		do_add:   { OP; stack.back() += op; ++dip; DISPATCH; }
+		do_sub:   { OP; stack.back() -= op; ++dip; DISPATCH; }
+		do_mul:   { OP; stack.back() *= op; ++dip; DISPATCH; }
+		do_div:   { OP; stack.back() /= op; ++dip; DISPATCH; }
+		do_addfp: { OPFP(+); ++dip; DISPATCH; }
+		do_subfp: { OPFP(-); ++dip; DISPATCH; }
+		do_mulfp: { OPFP(*); ++dip; DISPATCH; }
+		do_divfp: { OPFP(/); ++dip; DISPATCH; }
+		do_not:   { stack.back() = !stack.back(); ++dip; DISPATCH; }
+		do_and:   { OP; stack.back() = stack.back() && op; ++dip; DISPATCH; }
+		do_or:    { OP; stack.back() = stack.back() || op; ++dip; DISPATCH; }
+		do_iseq:  { OP; stack.back() = stack.back() == op; ++dip; DISPATCH; }
+		do_isgt:  { OP; stack.back() = stack.back() >  op; ++dip; DISPATCH; }
+		do_isge:  { OP; stack.back() = stack.back() >= op; ++dip; DISPATCH; }
+		do_islt:  { OP; stack.back() = stack.back() <  op; ++dip; DISPATCH; }
+		do_isle:  { OP; stack.back() = stack.back() <= op; ++dip; DISPATCH; }
+		do_jmp:   { dip = program + PARAM; DISPATCH; }
+		do_jif:   { OP; if(op) dip = program + PARAM; else dip+=2;  DISPATCH; }
+		do_load:  { stack.push_back(locals[PARAM]); dip+=2; DISPATCH; }
+		do_store: { OP; locals[PARAM] = op; dip+=2; DISPATCH; }
+		do_inc:   { stack.back() += 1; ++dip; DISPATCH; }
+		do_dec:   { stack.back() -= 1; ++dip; DISPATCH; }
+		do_jnz:   { if(stack.back() != 0) dip = program + PARAM; else dip+=2; DISPATCH; }
+		do_halt: {
+			halted = true;
+			break;
+		}
+	}
+#undef DISPATCH
+#undef OP
+#undef PARAM
+#undef OPFP
+
+	delete[] program;
 	return stack.back();
 }
